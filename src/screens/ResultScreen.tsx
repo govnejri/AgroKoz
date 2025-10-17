@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
+// import Svg, { Rect } from 'react-native-svg'; // Не используется - боксы отключены
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DatabaseService from '../services/DatabaseService';
 import { AnalysisResult, CLASS_COLORS } from '../types';
@@ -60,6 +60,8 @@ const ResultScreen: React.FC = () => {
     }
   };
 
+  /*
+  // Функция отрисовки боксов ОТКЛЮЧЕНА - боксы больше не показываются
   const renderBoundingBoxes = () => {
     return result.detections.map((detection, index) => {
       const color = CLASS_COLORS[detection.class];
@@ -79,22 +81,26 @@ const ResultScreen: React.FC = () => {
       );
     });
   };
+  */
 
   const { statistics } = result;
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Изображение с разметкой */}
+        {/* Изображение БЕЗ разметки (боксы убраны) */}
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: result.imageUri }}
             style={styles.image}
             resizeMode="contain"
           />
-          <Svg style={StyleSheet.absoluteFill}>
-            {renderBoundingBoxes()}
-          </Svg>
+          {/* 
+            Отрисовка боксов ОТКЛЮЧЕНА по запросу
+            <Svg style={StyleSheet.absoluteFill}>
+              {renderBoundingBoxes()}
+            </Svg>
+          */}
         </View>
 
         {/* Основная статистика */}
