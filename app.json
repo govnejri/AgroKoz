@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "AgroKozExpo",
-    "slug": "AgroKozExpo",
+    "name": "Agro-Koz",
+    "slug": "agro-koz",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,21 +10,39 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#22c55e"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.agrokoz.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#22c55e"
       },
+      "package": "com.agrokoz.app",
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Разрешите приложению использовать камеру для съемки зерна"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Разрешите приложению доступ к галерее"
+        }
+      ]
+    ]
   }
 }
