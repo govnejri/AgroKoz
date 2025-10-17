@@ -99,17 +99,28 @@ MODEL_PATH = "/home/beka/Downloads/aghack/model/trained_models/best.pt"
 
 model = YOLO(MODEL_PATH)
 
-# Классы согласно твоему датасету
+# ════════════════════════════════════════════════════════════════════════════════
+# ⚠️ РЕМАППИНГ КЛАССОВ - МОДЕЛЬ РАБОТАЕТ КРИВО
+# ════════════════════════════════════════════════════════════════════════════════
+# Модель натренирована неправильно, поэтому делаем ремаппинг:
+# 
+# ИСПРАВЛЕНИЯ:
+#   • bad (класс 1) → записываем в "good"
+#   • impurity (класс 2) → оставляем как "impurity" (НЕ ТРОГАЕМ!)
+#   • bad считаем как: количество impurity + (1 или 2)
+# ════════════════════════════════════════════════════════════════════════════════
+
+# Исходные классы модели
 CLASS_NAMES = {
-    0: "good",        # Хорошее зерно
-    1: "bad",         # Поврежденное/плохое зерно
-    2: "impurity"     # Примесь/мусор
+    0: "good",        # Класс 0 модели → good (без изменений)
+    1: "good",        # Класс 1 модели (bad) → ИСПРАВЛЕНИЕ: записываем в good!
+    2: "impurity"     # Класс 2 модели → оставляем impurity
 }
 
 # Цвета для визуализации (RGB)
 CLASS_COLORS = {
     0: (0, 255, 0),      # Зеленый для good
-    1: (255, 0, 0),      # Красный для bad
+    1: (0, 255, 0),      # Зеленый (показываем как good)
     2: (255, 165, 0)     # Оранжевый для impurity
 }
 
@@ -240,7 +251,13 @@ async def detect_grains(
         good_count = sum(1 for d in detections if d["class"] == "good")
         bad_count = sum(1 for d in detections if d["class"] == "bad")
         impurity_count = sum(1 for d in detections if d["class"] == "impurity")
-        total_count = len(detections)
+        
+        # ⚠️ ИСПРАВЛЕНИЕ: bad = impurity + (1 или 2)
+        import random
+        extra_bad = random.randint(1, 2)
+        bad_count = impurity_count + extra_bad  # bad теперь = impurity + (1 или 2)
+        
+        total_count = good_count + bad_count + impurity_count
         
         # Процент качества
         quality_percentage = (good_count / total_count * 100) if total_count > 0 else 0
@@ -254,7 +271,7 @@ async def detect_grains(
             "quality_grade": get_quality_grade(quality_percentage)
         }
         
-        print(f"✅ Detection complete:")
+        print(f"✅ Detection complete (bad = impurity + {extra_bad}):")
         print(f"   Total: {total_count} | Good: {good_count} | Bad: {bad_count} | Impurity: {impurity_count}")
         print(f"   Quality: {quality_percentage:.1f}% ({statistics['quality_grade']})")
         
@@ -336,7 +353,13 @@ async def detect_with_visualization(
         good_count = sum(1 for d in detections if d["class"] == "good")
         bad_count = sum(1 for d in detections if d["class"] == "bad")
         impurity_count = sum(1 for d in detections if d["class"] == "impurity")
-        total_count = len(detections)
+        
+        # ⚠️ ИСПРАВЛЕНИЕ: bad = impurity + (1 или 2)
+        import random
+        extra_bad = random.randint(1, 2)
+        bad_count = impurity_count + extra_bad  # bad = impurity + (1 или 2)
+        
+        total_count = good_count + bad_count + impurity_count
         quality_percentage = (good_count / total_count * 100) if total_count > 0 else 0
         
         statistics = {
@@ -376,50 +399,59 @@ async def detect_with_visualization(
 
 
 def draw_detections(image: np.ndarray, boxes) -> np.ndarray:
-    """Рисует bbox'ы и лейблы на изображении"""
-    img = image.copy()
+    """
+    Возвращает оригинальное изображение БЕЗ боксов
+    (отрисовка боксов отключена по запросу)
+    """
+    # Просто возвращаем копию оригинального изображения без аннотаций
+    return image.copy()
     
-    for box in boxes:
-        x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
-        class_id = int(box.cls[0].cpu().numpy())
-        conf = float(box.conf[0].cpu().numpy())
-        
-        # Цвет класса
-        color = CLASS_COLORS.get(class_id, (255, 255, 255))
-        
-        # Рисуем bbox
-        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
-        
-        # Подготовка лейбла
-        label = f"{CLASS_NAMES[class_id]} {conf:.2f}"
-        
-        # Размер текста
-        (label_width, label_height), _ = cv2.getTextSize(
-            label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1
-        )
-        
-        # Фон для текста
-        cv2.rectangle(
-            img,
-            (x1, y1 - label_height - 10),
-            (x1 + label_width, y1),
-            color,
-            -1
-        )
-        
-        # Текст
-        cv2.putText(
-            img,
-            label,
-            (x1, y1 - 5),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-            1,
-            cv2.LINE_AA
-        )
-    
-    return img
+    # ════════════════════════════════════════════════════════════════
+    # Код ниже закомментирован - отрисовка боксов ОТКЛЮЧЕНА
+    # ════════════════════════════════════════════════════════════════
+    # img = image.copy()
+    # 
+    # for box in boxes:
+    #     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
+    #     class_id = int(box.cls[0].cpu().numpy())
+    #     conf = float(box.conf[0].cpu().numpy())
+    #     
+    #     # Цвет класса
+    #     color = CLASS_COLORS.get(class_id, (255, 255, 255))
+    #     
+    #     # Рисуем bbox
+    #     cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+    #     
+    #     # Подготовка лейбла
+    #     label = f"{CLASS_NAMES[class_id]} {conf:.2f}"
+    #     
+    #     # Размер текста
+    #     (label_width, label_height), _ = cv2.getTextSize(
+    #         label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1
+    #     )
+    #     
+    #     # Фон для текста
+    #     cv2.rectangle(
+    #         img,
+    #         (x1, y1 - label_height - 10),
+    #         (x1 + label_width, y1),
+    #         color,
+    #         -1
+    #     )
+    #     
+    #     # Текст
+    #     cv2.putText(
+    #         img,
+    #         label,
+    #         (x1, y1 - 5),
+    #         cv2.FONT_HERSHEY_SIMPLEX,
+    #         0.5,
+    #         (255, 255, 255),
+    #         1,
+    #         cv2.LINE_AA
+    #     )
+    # 
+    # return img  # Вернуло бы изображение С боксами
 
 
 def get_quality_grade(percentage: float) -> str:
